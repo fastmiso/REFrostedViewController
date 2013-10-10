@@ -25,6 +25,11 @@
 
 #import <UIKit/UIKit.h>
 
+typedef NS_ENUM(NSUInteger, REFrostedViewConrollerEdgeSourceType) {
+	REFrostedViewConrollerEdgeSourceTypeLeft,
+	REFrostedViewConrollerEdgeSourceTypeRight
+};
+
 @interface REFrostedViewController : UIViewController
 
 @property (strong, readwrite, nonatomic) UIColor *blurTintColor;
@@ -33,6 +38,7 @@
 @property (assign, readwrite, nonatomic) CGFloat threshold;
 @property (assign, readwrite, nonatomic) NSTimeInterval animationDuration;
 @property (assign, readonly, nonatomic, getter = isHidden) BOOL hidden;
+@property (assign, readwrite, nonatomic) REFrostedViewConrollerEdgeSourceType edgeType;
 
 - (void)presentFromViewController:(UIViewController *)controller animated:(BOOL)animated completion:(void(^)(void))completionHandler;
 - (void)presentFromViewController:(UIViewController *)controller panGestureRecognizer:(UIPanGestureRecognizer *)recognizer;

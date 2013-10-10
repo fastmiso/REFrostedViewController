@@ -75,6 +75,7 @@
     self.blurSaturationDeltaFactor = 1.8f;
     self.threshold = 50.0f;
     self.blurRadius = 10.0f;
+	self.edgeType = REFrostedViewConrollerEdgeSourceTypeLeft;
     self.imageView = ({
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectNull];
         imageView.contentMode = UIViewContentModeLeft;
@@ -133,9 +134,10 @@
     self.imageView.image = [[controller.view re_screenshot] re_applyBlurWithRadius:self.blurRadius tintColor:self.blurTintColor saturationDeltaFactor:self.blurSaturationDeltaFactor maskImage:nil];
     self.view.frame = controller.view.bounds;
     [self addToParentViewController:controller callingAppearanceMethods:YES];
-    
-    self.imageView.frame = CGRectMake(0, 0, 0, self.imageView.image.size.height);
-    self.fadedView.frame = CGRectMake(0, 0, self.imageView.image.size.width, self.imageView.image.size.height);
+
+	CGFloat x = self.edgeType == REFrostedViewConrollerEdgeSourceTypeLeft ? 0 : self.view.frame.size.width;
+    self.imageView.frame = CGRectMake(x, 0, 0, self.imageView.image.size.height);
+    self.fadedView.frame = CGRectMake(x, 0, self.imageView.image.size.width, self.imageView.image.size.height);
     
     self.minimumChildViewWidth = self.view.frame.size.width - self.threshold;
     [self updateChildViewLayout];
@@ -219,11 +221,13 @@
     
     CGRect frame = self.imageView.frame;
     frame.size.width = offset;
+	if (self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight)
+		frame.origin.x = self.view.frame.size.width - offset;
     self.imageView.frame = frame;
     
     frame = self.fadedView.frame;
     frame.size.width = self.view.frame.size.width - offset;
-    frame.origin.x = offset;
+    frame.origin.x = self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight ? 0 : offset;
     self.fadedView.frame = frame;
     
     [self updateChildViewLayout];
@@ -235,7 +239,13 @@
         if ([view isEqual:self.imageView] || [view isEqual:self.fadedView])
             continue;
         CGFloat width = self.imageView.frame.size.width < self.minimumChildViewWidth ? self.minimumChildViewWidth : self.imageView.frame.size.width;
-        CGFloat x = self.imageView.frame.size.width < self.minimumChildViewWidth ? self.imageView.frame.size.width - self.minimumChildViewWidth : 0;
+
+        CGFloat x = 0.0;
+		if (self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight) {
+			x = self.imageView.frame.origin.x;
+		} else {
+			x = self.imageView.frame.size.width < self.minimumChildViewWidth ? self.imageView.frame.size.width - self.minimumChildViewWidth : 0;
+		}
         
         CGRect frame = CGRectMake(x, 0, width, self.view.frame.size.height);
         view.frame = frame;
@@ -266,24 +276,37 @@
         CGFloat offset = self.imageViewWidth + point.x;
         if (offset > self.view.frame.size.width)
             offset = self.view.frame.size.width;
-        
-        if (offset < 0)
+
+        if (self.edgeType == REFrostedViewConrollerEdgeSourceTypeLeft && offset < 0)
             return;
-        
+		else if (self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight && (self.view.frame.size.width - self.imageViewWidth + point.x) < 0)
+			return;
+
         CGRect frame = self.imageView.frame;
-        frame.size.width = offset;
+		if (self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight) {
+			frame.size.width = self.imageViewWidth - point.x;
+			frame.origin.x = self.view.frame.size.width - self.imageViewWidth + point.x;
+		} else {
+			frame.size.width = offset;
+		}
         self.imageView.frame = frame;
         
         frame = self.fadedView.frame;
-        frame.size.width = self.view.frame.size.width - offset;
-        frame.origin.x = offset;
+		if (self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight) {
+			frame.size.width = self.view.frame.size.width - self.imageViewWidth + point.x;
+			frame.origin.x = 0;
+		} else {
+			frame.size.width = self.view.frame.size.width - offset;
+			frame.origin.x = offset;
+		}
         self.fadedView.frame = frame;
         
         [self updateChildViewLayout];
     }
     
     if (recognizer.state == UIGestureRecognizerStateEnded) {
-        if ([recognizer velocityInView:self.view].x < 0) {
+        if (([recognizer velocityInView:self.view].x < 0 && self.edgeType == REFrostedViewConrollerEdgeSourceTypeLeft) || \
+			([recognizer velocityInView:self.view].x > 0 && self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight)) {
             [self dismissAnimated:YES animationDuration:0.2f completion:nil];
         } else {
             [UIView animateWithDuration:0.2f animations:^{

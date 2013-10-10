@@ -11,7 +11,9 @@
 
 @interface DEMONavigationController ()
 
-@property (strong, readwrite, nonatomic) DEMOMenuViewController *menuViewController;
+@property (strong, readwrite, nonatomic) DEMOMenuViewController *leftMenuViewController;
+
+@property (strong, readwrite, nonatomic) DEMOMenuViewController *rightMenuViewController;
 
 @end
 
@@ -20,15 +22,24 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.menuViewController = [[DEMOMenuViewController alloc] init];
-    self.menuViewController.navigationController = self;
-    
-    [self.view addGestureRecognizer:[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)]];
+
+    self.leftMenuViewController = [[DEMOMenuViewController alloc] init];
+    self.leftMenuViewController.navigationController = self;
+	self.leftMenuViewController.edgeType = REFrostedViewConrollerEdgeSourceTypeLeft;
+	UIPanGestureRecognizer *leftGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(leftGestureRecognized:)];
+    [self.view addGestureRecognizer:leftGesture];
+
+    self.rightMenuViewController = [[DEMOMenuViewController alloc] init];
+    self.rightMenuViewController.navigationController = self;
+	self.rightMenuViewController.edgeType = REFrostedViewConrollerEdgeSourceTypeRight;
+	UIScreenEdgePanGestureRecognizer *rightGesture = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(rightGestureRecognized:)];
+	rightGesture.edges = UIRectEdgeRight;
+    [self.view addGestureRecognizer:rightGesture];
 }
 
 - (void)showMenu
 {
-    [self.menuViewController presentFromViewController:self animated:YES completion:nil];
+    [self.leftMenuViewController presentFromViewController:self animated:YES completion:nil];
 }
 
 #pragma mark -
@@ -36,15 +47,20 @@
 
 - (BOOL)shouldAutorotate
 {
-    return self.menuViewController.hidden;
+    return self.leftMenuViewController.hidden && self.rightMenuViewController.hidden;
 }
 
 #pragma mark -
-#pragma mark Gesture recognizer
+#pragma mark Gesture recognizers
 
-- (void)panGestureRecognized:(UIPanGestureRecognizer *)sender
+- (void)leftGestureRecognized:(UIPanGestureRecognizer *)sender
 {
-    [self.menuViewController presentFromViewController:self panGestureRecognizer:sender];
+    [self.leftMenuViewController presentFromViewController:self panGestureRecognizer:sender];
+}
+
+- (void)rightGestureRecognized:(UIScreenEdgePanGestureRecognizer *)sender
+{
+    [self.rightMenuViewController presentFromViewController:self panGestureRecognizer:sender];
 }
 
 @end
