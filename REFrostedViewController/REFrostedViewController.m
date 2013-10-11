@@ -132,6 +132,9 @@
     self.visible = YES;
     self.imageViewWidth = 0;
     self.imageView.image = [[controller.view re_screenshot] re_applyBlurWithRadius:self.blurRadius tintColor:self.blurTintColor saturationDeltaFactor:self.blurSaturationDeltaFactor maskImage:nil];
+	if (self.edgeType == REFrostedViewConrollerEdgeSourceTypeRight)
+		self.imageView.contentMode = UIViewContentModeRight;
+
     self.view.frame = controller.view.bounds;
     [self addToParentViewController:controller callingAppearanceMethods:YES];
 
